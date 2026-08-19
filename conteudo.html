@@ -1,39 +1,132 @@
 <!DOCTYPE html>
 <html lang="pt-br">
+
 <head>
     <meta charset="UTF-8">
-    <title>Kaliumt</title>
-        <link rel="stylesheet" href="/css/index.css">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' http://127.0.0.1:5500; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'">
+    <title>Kalium</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="../css/search-modal.css">
 </head>
+
 <body>
+
     <header class="top-bar">
-    <div class="logo-container">
-        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M2 15c6.667-6 13.333 0 20-6M2 9c6.667 6 13.333 0 20 6" />
-        </svg>
-        <div class="brand-text">
-        <span class="title">BIOLOGIA</span>
-        <span class="subtitle">A vida em estudo</span>
+        <div class="logo-container">
+            <img src="/img/Titulo_kalium.png" alt="Kalium">
+            <div class="brand-text">
+                <span class="title">Kalium</span>
+                <span class="subtitle">Estudos sobre potássio.</span>
+            </div>
+        </div>
+
+        <button
+            class="menu-toggle"
+            aria-label="Abrir menu"
+            aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <nav class="nav-links">
+            <a href="index.html" class="nav-item">Início</a>
+            <a href="conteudo.html" class="nav-item active">Conteúdos</a>
+            <a href="ciclo.html" class="nav-item">Ciclo</a>
+            <a href="sobre.html" class="nav-item">Sobre</a>
+        </nav>
+
+        <div class="actions">
+            <button class="icon-btn" aria-label="Buscar">
+                <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    width="20"
+                    height="20">
+                    <circle
+                        cx="11"
+                        cy="11"
+                        r="8">
+                    </circle>
+                    <line
+                        x1="21"
+                        y1="21"
+                        x2="16.65"
+                        y2="16.65">
+                    </line>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="nav-overlay"></div>
+
+    <main class="conteudo-principal">
+
+        <div class="hero-content">
+
+            <h1>Conteúdos sobre Potássio</h1>
+            <p>
+                Descubra informações detalhadas sobre o potássio
+                e seu papel na agricultura e no meio ambiente.
+            </p>
+        </div>
+
+        <div class="botoes-conteudo">
+
+            <button
+                class="btn-glass"
+                data-conteudo="corpo">
+                Importância do Potássio
+            </button>
+
+            <button
+                class="btn-glass"
+                data-conteudo="corpo">
+                Funções no Corpo Humano
+            </button>
+        </div>
+    </main>
+
+    <div
+        class="conteudo-overlay"
+        id="conteudoOverlay">
+        <div class="conteudo-modal">
+            <button
+                class="conteudo-fechar"
+                id="conteudoFechar"
+                aria-label="Fechar">
+                ×
+            </button>
+
+            
+            <div class="conteudo-modal-header">
+                <h2 id="conteudoTitulo"></h2>
+            </div>
+            <div
+                class="conteudo-modal-body"
+                id="conteudoTexto">
+            </div>
         </div>
     </div>
 
-    <nav class="nav-links">
-        <a href="index.html" class="nav-item active">Início</a>
-        <a href="conteudo.html" class="nav-item">Conteúdos</a>
-        <a href="recursor.html" class="nav-item">Recursos</a>
-        <a href="exercicios.html" class="nav-item">Exercícios</a>
-        <a href="sobre.html" class="nav-item">Sobre</a>
-    </nav>
 
-    <div class="actions">
-        <button class="icon-btn" aria-label="Buscar">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        </button>
-        <a href="#" class="btn-primary">Entrar</a>
-    </div>
-</header>
+    <footer class="footer">
+        <h6>Desenvolvedor: Kauê Seemann da Cruz </h6>
+        <h6>Pesquisas: Yasmin Hersing de Cesaro </h6>
+    </footer>
+
+
+    <script defer src="/js/search-data.js"></script>
+    <script defer src="/js/search-engine.js"></script>
+    <script defer src="/js/search-ui.js"></script>
+    <script defer src="/js/search-highlight.js"></script>
+    <script defer src="/js/menu.js"></script>
+    <script defer src="/js/conteudo-modal.js"></script>
+
 </body>
+
 </html>
