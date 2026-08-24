@@ -1,0 +1,26 @@
+.kalium-highlight {
+    background: linear-gradient(180deg, transparent 60%, #22c55e55 60%);
+    color: inherit;
+    padding: 0 2px;
+    border-radius: 3px;
+    transition: background 1.2s ease;
+    scroll-margin-top: 80px;
+}
+
+.kalium-highlight.kalium-pulse {
+    animation: kalium-pulse-anim 2s ease;
+}
+
+@keyframes kalium-pulse-anim {
+    0% {
+        background: linear-gradient(180deg, transparent 60%, #22c55e 60%);
+    }
+
+    50% {
+        background: linear-gradient(180deg, transparent 60%, #16a34a 60%);
+    }
+
+    100% {
+        background: linear-gradient(180deg, transparent 60%, #22c55e55 60%);
+    }
+}

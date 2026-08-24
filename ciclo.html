@@ -2,10 +2,14 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" 
-      content="default-src 'self'; connect-src 'self' http://127.0.0.1:5500; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'">
-    <title>Kalium</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy"
+        content="default-src 'self';
+                script-src 'self' https://localhost:8000 'unsafe-inline';
+                style-src 'self' https://localhost:8000 'unsafe-inline';
+                img-src 'self' https://localhost:8000;
+                connect-src 'self' http://localhost:8000 https://localhost:8000;
+                font-src 'self' https://localhost:8000;">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../css/index.css">
     <link rel="stylesheet" href="../css/search-modal.css">
 </head>
@@ -47,15 +51,22 @@
     <main>
         <div class="hero-content">
             <h1>Ciclo do Potássio</h1>
-            <p>O ciclo do potássio é um processo natural que descreve a movimentação do potássio através do solo, plantas, animais e atmosfera. Ele é essencial para a fertilidade do solo e o crescimento das plantas.</p>
+            <p>O ciclo do potássio é um processo natural que descreve a movimentação do potássio através do solo, plantas e animais. Ele é essencial para a fertilidade do solo e o crescimento das plantas.</p>
         </div>
 
         <div class="cards-container">
             <div class="info-card">
                 <h2>Ciclo do Potássio</h2>
-                <p>O ciclo do potássio é um processo natural que descreve a movimentação do potássio através do solo, plantas, animais e atmosfera. Ele é essencial para a fertilidade do solo e o crescimento das plantas.</p>
-                <p>O potássio é absorvido pelas raízes das plantas na forma de íons K+. Após a absorção, ele é transportado para diferentes partes da planta, desempenhando papéis cruciais na fotossíntese, regulação da água e síntese de proteínas.</p>
-                <p>Quando as plantas morrem ou são consumidas por animais, o potássio retorna ao solo através da decomposição ou excreção. Além disso, processos como lixiviação e erosão podem levar à perda de potássio do solo, tornando a reposição desse nutriente vital importante para a agricultura sustentável.</p>
+                <p>O ciclo do potássio é um processo biogeoquímico sedimentar que descreve a movimentação do nutriente entre rochas, solo, água e organismos vivos. Ele é essencial para a fertilidade do solo e o desenvolvimento das plantas.</p>
+                
+                <p>O potássio passa por três etapas fundamentais:</p>
+                <ul>
+                    <li><strong>Etapa Geológica/Edafológica:</strong> O intemperismo desintegra minerais como feldspatos e micas, liberando o potássio das rochas para o solo.</li>
+                    <li><strong>Etapa Biológica:</strong> As raízes absorvem o mineral na forma de íons K⁺, essenciais para a fotossíntese, regulação hídrica e síntese de proteínas. O potássio avança na cadeia alimentar via herbívoros e carnívoros, retornando ao solo pela decomposição e excreção.</li>
+                    <li><strong>Etapa Hidrológica:</strong> A água de processos como lixiviação e erosão arrasta parte do potássio para rios, lagos e oceanos, onde é absorvido por organismos aquáticos.</li>
+                </ul>
+
+                <p>A perda do mineral por lixiviação e colheita torna a reposição de potássio vital para a agricultura sustentável.</p>
             </div>
         </div>
     </main>

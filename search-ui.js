@@ -25,7 +25,7 @@ class KaliumSearchUI {
                     <button class="search-modal-close" id="searchCloseBtn">×</button>
                 </div>
                 <input type="text" id="searchInput" class="search-modal-input"
-                       placeholder="Pesquisar no Kalium..." autocomplete="off">
+                    placeholder="Pesquisar no Kalium..." autocomplete="off">
                 <div class="search-result-count" id="resultCount"></div>
                 <div class="search-results-container" id="searchResults">
                     <div class="search-empty-state">
@@ -98,27 +98,98 @@ class KaliumSearchUI {
     }
 
     navegarComTermo(page, url, termo) {
+
         const paths = {
-            index: '../index.html',
-            conteudo: '../html/conteudo.html',
-            ciclo: '../html/ciclo.html',
-            sobre: '../html/sobre.html',
+            index: '/html/index.html',
+            conteudo: '/html/conteudo.html',
+            ciclo: '/html/ciclo.html',
+            sobre: '/html/sobre.html'
         };
 
-        let destino;
-        if (url && /^https?:/.test(url)) {
+        let destino = null;
+
+        // Normaliza o nome da página recebido pela API
+        const pagina = String(page || '')
+            .trim()
+            .toLowerCase();
+
+        // 1. Tenta encontrar pelo nome da página
+        if (pagina === 'index') {
+            destino = paths.index;
+        }
+
+        else if (pagina === 'conteudo') {
+            destino = paths.conteudo;
+        }
+
+        else if (pagina === 'ciclo') {
+            destino = paths.ciclo;
+        }
+
+        else if (pagina === 'sobre') {
+            destino = paths.sobre;
+        }
+
+        // 2. Se não encontrou pela página, usa a URL
+        if (!destino && url) {
+
             destino = url;
-        } else {
-            destino = paths[page] || (url && url.startsWith('/') ? url : './index.html');
+
+            // Remove / inicial para poder normalizar
+            destino = destino.replace(/^\/+/, '');
+
+            // Se já começa com html/, mantém
+            if (!destino.startsWith('html/')) {
+                destino = `html/${destino}`;
+            }
+
+            destino = `/${destino}`;
         }
 
+        // 3. Fallback
+        if (!destino) {
+            destino = paths.index;
+        }
+
+        // 4. Adiciona o termo ANTES do #
         if (termo) {
-            const sep = destino.includes('?') ? '&' : '?';
-            destino = `${destino}${sep}buscar=${encodeURIComponent(termo)}`;
-            sessionStorage.setItem('kalium_termo', termo);
+
+            const hashIndex = destino.indexOf('#');
+
+            let base = destino;
+            let hash = '';
+
+            if (hashIndex !== -1) {
+                base = destino.substring(0, hashIndex);
+                hash = destino.substring(hashIndex);
+            }
+
+            const sep =
+                base.includes('?')
+                    ? '&'
+                    : '?';
+
+            destino =
+                `${base}${sep}buscar=${encodeURIComponent(termo)}${hash}`;
+
+            sessionStorage.setItem(
+                'kalium_termo',
+                termo
+            );
         }
 
-        console.log(`[Kalium] Navegando para: ${destino}`);
+        console.log(
+            `[Kalium] Página recebida: "${page}"`
+        );
+
+        console.log(
+            `[Kalium] URL recebida: "${url}"`
+        );
+
+        console.log(
+            `[Kalium] Navegando para: ${destino}`
+        );
+
         window.location.href = destino;
     }
 

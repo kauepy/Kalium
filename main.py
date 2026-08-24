@@ -226,19 +226,25 @@ async def info():
 
 
 # ---------- BUSCA ----------
-@app.post("/api/v1/buscar")
-async def buscar_conteudo(request: BuscaRequest):
+@app.get("/api/v1/buscar")
+async def buscar_conteudo(
+    termo: str = Query(..., min_length=1, max_length=200),
+    categoria: str | None = Query(None, max_length=50),
+    pagina: int = Query(1, ge=1, le=1000),
+    limite: int = Query(20, ge=1, le=100),
+):
     resultados, total = store.buscar(
-        termo=request.termo,
-        categoria=request.categoria,
-        pagina=request.pagina,
-        limite=request.limite,
+        termo=termo,
+        categoria=categoria,
+        pagina=pagina,
+        limite=limite,
     )
+
     return {
-        "termo": request.termo,
-        "categoria": request.categoria,
-        "pagina": request.pagina,
-        "limite": request.limite,
+        "termo": termo,
+        "categoria": categoria,
+        "pagina": pagina,
+        "limite": limite,
         "total": total,
         "resultados": resultados,
     }

@@ -3,8 +3,14 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src 'self' http://127.0.0.1:5500; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'">
-    <title>Kalium</title>
+<meta http-equiv="Content-Security-Policy"
+        content="default-src 'self';
+                script-src 'self' https://localhost:8000 'unsafe-inline';
+                style-src 'self' https://localhost:8000 'unsafe-inline';
+                img-src 'self' https://localhost:8000;
+                connect-src 'self' http://localhost:8000 https://localhost:8000;
+                font-src 'self' https://localhost:8000;">
+<title>Kalium</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="../css/index.css">
     <link rel="stylesheet" href="../css/search-modal.css">
@@ -75,19 +81,41 @@
             </p>
         </div>
 
-        <div class="botoes-conteudo">
+            <div class="botoes-conteudo">
 
-            <button
-                class="btn-glass"
-                data-conteudo="corpo">
-                Importância do Potássio
-            </button>
+                <div class="botoes-conteudo">
 
-            <button
-                class="btn-glass"
-                data-conteudo="corpo">
-                Funções no Corpo Humano
-            </button>
+                <button
+                    class="btn-glass"
+                    data-conteudo="plantas">
+                    Importância nas Plantas
+                </button>
+
+                <button
+                    class="btn-glass"
+                    data-conteudo="humano">
+                    Funções no Corpo Humano
+                </button>
+
+                <button
+                    class="btn-glass"
+                    data-conteudo="formas-solo">
+                    Formas de Potássio no Solo
+                </button>
+
+                <button
+                    class="btn-glass"
+                    data-conteudo="perdas-solo">
+                    Perdas no Solo
+                </button>
+
+                <button
+                    class="btn-glass"
+                    data-conteudo="manejo-fertilizantes">
+                    Manejo e Fertilizantes
+                </button>
+
+            </div>
         </div>
     </main>
 

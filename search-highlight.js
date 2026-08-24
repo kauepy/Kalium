@@ -1,139 +1,477 @@
 // search-highlight.js
-// Destaca todas as ocorrências do termo na página e rola até a primeira.
-// Usa sessionStorage (some ao fechar a aba).
+// Destaca o termo pesquisado na página.
+// Remove os destaques automaticamente quando a pesquisa é apagada.
 
 (function () {
+
     const HIGHLIGHT_CLASS = 'kalium-highlight';
 
-    function injetarCSS() {
-        if (document.getElementById('kalium-highlight-style')) return;
-        const css = `
-            .${HIGHLIGHT_CLASS} {
-                background: linear-gradient(180deg, transparent 60%, #22c55e55 60%);
-                color: inherit;
-                padding: 0 2px;
-                border-radius: 3px;
-                transition: background 1.2s ease;
-                scroll-margin-top: 80px;
-            }
-            .${HIGHLIGHT_CLASS}.kalium-pulse {
-                animation: kalium-pulse-anim 2s ease;
-            }
-            @keyframes kalium-pulse-anim {
-                0%   { background: linear-gradient(180deg, transparent 60%, #22c55e 60%); }
-                50%  { background: linear-gradient(180deg, transparent 60%, #16a34a 60%); }
-                100% { background: linear-gradient(180deg, transparent 60%, #22c55e55 60%); }
-            }
-        `;
-        const style = document.createElement('style');
-        style.id = 'kalium-highlight-style';
-        style.textContent = css;
-        document.head.appendChild(style);
+
+    // =========================================================
+    // ESCAPA CARACTERES ESPECIAIS PARA USAR O TERMO NO REGEX
+    // =========================================================
+
+    function escaparRegex(termo) {
+
+        return termo.replace(
+            /[.*+?^${}()|[\]\\]/g,
+            '\\$&'
+        );
+
     }
 
-    function destacarTermo(termo) {
-        if (!termo || !termo.trim()) return [];
-        const main = document.querySelector('main') || document.body;
-        if (!main) return [];
 
-        const escaped = termo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`(${escaped})`, 'gi');
+    // =========================================================
+    // DESTACA AS OCORRÊNCIAS
+    // =========================================================
+
+    function destacarTermo(termo) {
+
+        if (!termo || !termo.trim()) {
+            return [];
+        }
+
+        const main =
+            document.querySelector('main') ||
+            document.body;
+
+        if (!main) {
+            return [];
+        }
+
+        // Remove destaques antigos antes de criar novos
+        limparDestaques();
+
+        const escaped =
+            escaparRegex(termo.trim());
+
+        const regex =
+            new RegExp(`(${escaped})`, 'gi');
 
         const matches = [];
-        const walker = document.createTreeWalker(main, NodeFilter.SHOW_TEXT, {
-            acceptNode(node) {
-                const parent = node.parentElement;
-                if (!parent) return NodeFilter.FILTER_REJECT;
-                const tag = parent.tagName;
-                if (tag === 'SCRIPT' || tag === 'STYLE' || tag === 'INPUT' ||
-                    tag === 'TEXTAREA' || tag === 'NOSCRIPT' || tag === 'MARK') {
-                    return NodeFilter.FILTER_REJECT;
+
+        const walker =
+            document.createTreeWalker(
+                main,
+                NodeFilter.SHOW_TEXT,
+                {
+                    acceptNode(node) {
+
+                        const parent =
+                            node.parentElement;
+
+                        if (!parent) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+
+                        const tag =
+                            parent.tagName;
+
+                        // Não procurar dentro destes elementos
+                        if (
+                            tag === 'SCRIPT' ||
+                            tag === 'STYLE' ||
+                            tag === 'INPUT' ||
+                            tag === 'TEXTAREA' ||
+                            tag === 'NOSCRIPT' ||
+                            tag === 'MARK'
+                        ) {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+
+                        return NodeFilter.FILTER_ACCEPT;
+                    }
                 }
-                return NodeFilter.FILTER_ACCEPT;
-            },
-        });
+            );
+
 
         const textNodes = [];
+
         let node;
-        while ((node = walker.nextNode())) textNodes.push(node);
+
+        while (
+            (node = walker.nextNode())
+        ) {
+
+            textNodes.push(node);
+
+        }
+
 
         textNodes.forEach((textNode) => {
-            const text = textNode.nodeValue;
+
+            const text =
+                textNode.nodeValue;
+
+            regex.lastIndex = 0;
+
             if (!regex.test(text)) {
                 regex.lastIndex = 0;
                 return;
             }
+
             regex.lastIndex = 0;
 
-            const fragment = document.createDocumentFragment();
+            const fragment =
+                document.createDocumentFragment();
+
             let lastIndex = 0;
-            let m;
 
-            while ((m = regex.exec(text)) !== null) {
-                if (m.index > lastIndex) {
+            let match;
+
+
+            while (
+                (match = regex.exec(text)) !== null
+            ) {
+
+                // Texto antes do termo
+                if (match.index > lastIndex) {
+
                     fragment.appendChild(
-                        document.createTextNode(text.slice(lastIndex, m.index))
+                        document.createTextNode(
+                            text.slice(
+                                lastIndex,
+                                match.index
+                            )
+                        )
                     );
+
                 }
-                const mark = document.createElement('mark');
-                mark.className = HIGHLIGHT_CLASS;
-                mark.textContent = m[0];
+
+
+                // Elemento de destaque
+                const mark =
+                    document.createElement('mark');
+
+                mark.className =
+                    HIGHLIGHT_CLASS;
+
+                mark.textContent =
+                    match[0];
+
                 fragment.appendChild(mark);
+
                 matches.push(mark);
-                lastIndex = regex.lastIndex;
+
+                lastIndex =
+                    regex.lastIndex;
+
             }
 
+
+            // Texto depois do último termo
             if (lastIndex < text.length) {
-                fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+
+                fragment.appendChild(
+                    document.createTextNode(
+                        text.slice(lastIndex)
+                    )
+                );
+
             }
 
-            textNode.parentNode.replaceChild(fragment, textNode);
+
+            textNode.parentNode.replaceChild(
+                fragment,
+                textNode
+            );
+
         });
+
 
         return matches;
+
     }
+
+
+    // =========================================================
+    // VAI PARA O PRIMEIRO RESULTADO
+    // =========================================================
 
     function irParaPrimeira(matches) {
-        if (!matches || matches.length === 0) return;
-        const first = matches[0];
-        first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        if (
+            !matches ||
+            matches.length === 0
+        ) {
+            return;
+        }
+
+        const first =
+            matches[0];
+
+        first.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+        });
+
+
+        // Pequena animação no primeiro resultado
         setTimeout(() => {
-            first.classList.add('kalium-pulse');
-            setTimeout(() => first.classList.remove('kalium-pulse'), 2000);
+
+            first.classList.add(
+                'kalium-pulse'
+            );
+
+
+            setTimeout(() => {
+
+                first.classList.remove(
+                    'kalium-pulse'
+                );
+
+            }, 2000);
+
         }, 400);
+
     }
+
+
+    // =========================================================
+    // REMOVE TODOS OS DESTAQUES
+    // =========================================================
 
     function limparDestaques() {
-        document.querySelectorAll(`.${HIGHLIGHT_CLASS}`).forEach((el) => {
-            const parent = el.parentNode;
-            if (parent) {
-                parent.replaceChild(document.createTextNode(el.textContent), el);
-                parent.normalize();
+
+        const destaques =
+            document.querySelectorAll(
+                `.${HIGHLIGHT_CLASS}`
+            );
+
+
+        destaques.forEach((elemento) => {
+
+            const parent =
+                elemento.parentNode;
+
+            if (!parent) {
+                return;
             }
+
+
+            parent.replaceChild(
+                document.createTextNode(
+                    elemento.textContent
+                ),
+                elemento
+            );
+
+
+            // Junta novamente os nós de texto
+            parent.normalize();
+
         });
+
     }
+
+
+    // =========================================================
+    // ENCONTRA O CAMPO DE BUSCA
+    // =========================================================
+
+    function ehCampoDeBusca(elemento) {
+
+        if (!elemento) {
+            return false;
+        }
+
+        if (
+            elemento.tagName !== 'INPUT' &&
+            elemento.tagName !== 'TEXTAREA'
+        ) {
+            return false;
+        }
+
+
+        const id =
+            (elemento.id || '')
+                .toLowerCase();
+
+
+        const classe =
+            (elemento.className || '')
+                .toString()
+                .toLowerCase();
+
+
+        const placeholder =
+            (elemento.getAttribute('placeholder') || '')
+                .toLowerCase();
+
+
+        return (
+            id === 'searchinput' ||
+            id.includes('search') ||
+            id.includes('busca') ||
+            classe.includes('search') ||
+            classe.includes('busca') ||
+            placeholder.includes('buscar') ||
+            placeholder.includes('pesquisar')
+        );
+
+    }
+
+
+    // =========================================================
+    // MONITORA A PESQUISA
+    // =========================================================
+
+    function monitorarTermoBusca() {
+
+        document.addEventListener(
+            'input',
+            (event) => {
+
+                const input =
+                    event.target;
+
+
+                if (
+                    !ehCampoDeBusca(input)
+                ) {
+                    return;
+                }
+
+
+                const termo =
+                    input.value.trim();
+
+
+                // Se o usuário apagou a pesquisa
+                if (!termo) {
+
+                    limparDestaques();
+
+                    sessionStorage.removeItem(
+                        'kalium_termo'
+                    );
+
+
+                    console.log(
+                        '[Kalium] Pesquisa apagada. Destaques removidos.'
+                    );
+
+                    return;
+
+                }
+
+
+                // Se o usuário começou a alterar
+                // o termo, remove o destaque antigo.
+                limparDestaques();
+
+            }
+        );
+
+    }
+
+
+    // =========================================================
+    // OBSERVA MUDANÇAS NO DOM
+    // =========================================================
+
+    function observarCampoBusca() {
+
+        const observer =
+            new MutationObserver(() => {
+
+                // O listener principal está no document,
+                // então não precisamos fazer nada aqui.
+                // Esta função existe apenas para manter
+                // compatibilidade caso a busca seja recriada.
+
+            });
+
+
+        observer.observe(
+            document.body,
+            {
+                childList: true,
+                subtree: true
+            }
+        );
+
+    }
+
+
+    // =========================================================
+    // INICIALIZAÇÃO
+    // =========================================================
 
     function init() {
-        const termo = sessionStorage.getItem('kalium_termo');
-        if (!termo) return;
-        injetarCSS();
-        const matches = destacarTermo(termo);
-        if (matches.length > 0) {
-            irParaPrimeira(matches);
-            console.log(`[Kalium] ${matches.length} ocorrências de "${termo}" destacadas.`);
-        } else {
-            console.log(`[Kalium] Termo "${termo}" não encontrado nesta página.`);
+
+        // Começa a observar o campo de pesquisa
+        monitorarTermoBusca();
+
+        observarCampoBusca();
+
+
+        // Recupera o termo salvo
+        const termo =
+            sessionStorage.getItem(
+                'kalium_termo'
+            );
+
+
+        if (!termo) {
+            return;
         }
+
+
+        const matches =
+            destacarTermo(termo);
+
+
+        if (matches.length > 0) {
+
+            irParaPrimeira(matches);
+
+
+            console.log(
+                `[Kalium] ${matches.length} ocorrências de "${termo}" destacadas.`
+            );
+
+        } else {
+
+            console.log(
+                `[Kalium] Termo "${termo}" não encontrado nesta página.`
+            );
+
+        }
+
     }
+
+
+    // =========================================================
+    // DISPONIBILIZA AS FUNÇÕES PARA OUTROS JS
+    // =========================================================
 
     window.KaliumHighlightUI = {
+
         destacar: destacarTermo,
-        limpar: limparDestaques,
+
+        limpar: limparDestaques
+
     };
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', init);
+
+    // =========================================================
+    // INICIA QUANDO O DOM ESTIVER PRONTO
+    // =========================================================
+
+    if (
+        document.readyState === 'loading'
+    ) {
+
+        document.addEventListener(
+            'DOMContentLoaded',
+            init
+        );
+
     } else {
+
         init();
+
     }
+
 })();

@@ -494,17 +494,37 @@ main {
 }
 
 /* Telas muito pequenas */
-@media (max-width: 360px) {
-    .top-bar {
-        padding: 0.5rem 0.75rem;
+@media (max-width: 768px) {
+    /* Força o container principal a empilhar os elementos na vertical */
+    main {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
     }
 
-    .actions {
-        gap: 0.5rem;
+    /* Garante que o container do título ocupe a largura inteira e fique no topo */
+    .hero-content {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 24px;
     }
 
-    .icon-btn {
-        padding: 4px;
+    /* Reduz o tamanho das fontes para caber melhor na tela do celular */
+    .hero-content h1 {
+        font-size: 1.8rem;
+    }
+
+    .hero-content p {
+        font-size: 1rem;
+    }
+
+    /* Ajusta os cards para ficarem logo abaixo do título */
+    .cards-container {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
     }
 }
 
