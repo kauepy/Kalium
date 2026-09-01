@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy"
+        content="default-src 'self';
+                script-src 'self' https://localhost:8000 'unsafe-inline';
+                style-src 'self' https://localhost:8000 'unsafe-inline';
+                img-src 'self' https://localhost:8000;
+                connect-src 'self' http://localhost:8000 https://localhost:8000;
+                font-src 'self' https://localhost:8000;">
+<title>Kalium</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="../css/search-modal.css">
+</head>
+<body>
+    <header class="top-bar">
+        <div class="logo-container">
+            <img src="/img/Titulo_kalium.png" alt="Kalium">
+            <div class="brand-text">
+                <span class="title">Kalium</span>
+                <span class="subtitle">Estudos sobre potássio.</span>
+            </div>
+        </div>
+
+        <button class="menu-toggle" aria-label="Abrir menu" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <nav class="nav-links">
+            <a href="index.html" class="nav-item active">Início</a>
+            <a href="conteudo.html" class="nav-item">Conteúdos</a>
+            <a href="ciclo.html" class="nav-item">Ciclo</a>
+            <a href="sobre.html" class="nav-item">Sobre</a>
+        </nav>
+
+        <div class="actions">
+            <button class="icon-btn" aria-label="Buscar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="nav-overlay"></div>
+
+    <main>
+        <div class="hero-content">
+            <h1>Bem-vindo ao Kalium</h1>
+            <p>Explore o mundo do potássio e descubra informações valiosas...</p>
+            <div class="botao-container">
+                <a class="btn-glass" href="ciclo.html">Explorar o Ciclo Biogeoquímico do Potássio</a>
+                <a class="btn-glass" href="conteudo.html">Explorar Conteúdo</a>
+                <a class="btn-glass" href="sobre.html">Sobre o site</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <h6>Desenvolvedor: Kauê Seemann da Cruz</h6>
+        <h6>Pesquisas: Yasmin Hersing de Cesaro</h6>
+    </footer>
+
+    <script defer src="/js/search-data.js"></script>
+    <script defer src="/js/search-engine.js"></script>
+    <script defer src="/js/search-ui.js"></script>
+    <script defer src="/js/search-highlight.js"></script>
+    <script defer src="/js/menu.js"></script>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy"
+        content="default-src 'self';
+                script-src 'self' https://localhost:8000 'unsafe-inline';
+                style-src 'self' https://localhost:8000 'unsafe-inline';
+                img-src 'self' https://localhost:8000;
+                connect-src 'self' http://localhost:8000 https://localhost:8000;
+                font-src 'self' https://localhost:8000;">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="../css/index.css">
+    <link rel="stylesheet" href="../css/search-modal.css">
+</head>
+<body>
+    <header class="top-bar">
+        <div class="logo-container">
+            <img src="/img/Titulo_kalium.png" alt="Kalium">
+            <div class="brand-text">
+                <span class="title">Kalium</span>
+                <span class="subtitle">Estudos sobre potássio.</span>
+            </div>
+        </div>
+
+        <button class="menu-toggle" aria-label="Abrir menu" aria-expanded="false">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+
+        <nav class="nav-links">
+            <a href="index.html" class="nav-item">Início</a>
+            <a href="conteudo.html" class="nav-item">Conteúdos</a>
+            <a href="ciclo.html" class="nav-item active">Ciclo</a>
+            <a href="sobre.html" class="nav-item">Sobre</a>
+        </nav>
+
+        <div class="actions">
+            <button class="icon-btn" aria-label="Buscar">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <div class="nav-overlay"></div>
+
+    <main>
+        <div class="hero-content">
+            <h1>Ciclo do Potássio</h1>
+            <p>O ciclo do potássio é um processo natural que descreve a movimentação do potássio através do solo, plantas e animais. Ele é essencial para a fertilidade do solo e o crescimento das plantas.</p>
+        </div>
+
+        <div class="cards-container">
+            <div class="info-card">
+                <h2>Ciclo do Potássio</h2>
+                <p>O ciclo do potássio é um processo biogeoquímico sedimentar que descreve a movimentação do nutriente entre rochas, solo, água e organismos vivos. Ele é essencial para a fertilidade do solo e o desenvolvimento das plantas.</p>
+                
+                <p>O potássio passa por três etapas fundamentais:</p>
+                <ul>
+                    <li><strong>Etapa Geológica/Edafológica:</strong> O intemperismo desintegra minerais como feldspatos e micas, liberando o potássio das rochas para o solo.</li>
+                    <li><strong>Etapa Biológica:</strong> As raízes absorvem o mineral na forma de íons K⁺, essenciais para a fotossíntese, regulação hídrica e síntese de proteínas. O potássio avança na cadeia alimentar via herbívoros e carnívoros, retornando ao solo pela decomposição e excreção.</li>
+                    <li><strong>Etapa Hidrológica:</strong> A água de processos como lixiviação e erosão arrasta parte do potássio para rios, lagos e oceanos, onde é absorvido por organismos aquáticos.</li>
+                </ul>
+
+                <p>A perda do mineral por lixiviação e colheita torna a reposição de potássio vital para a agricultura sustentável.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <h6>Desenvolvedor: Kauê Seemann da Cruz</h6>
+        <h6>Pesquisas: Yasmin Hersing de Cesaro</h6>
+    </footer>
+
+    <script defer src="/js/search-data.js"></script>
+    <script defer src="/js/search-engine.js"></script>
+    <script defer src="/js/search-ui.js"></script>
+    <script defer src="/js/search-highlight.js"></script>
+    <script defer src="/js/menu.js"></script>
+</body>
+</html>
