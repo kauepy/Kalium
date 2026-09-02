@@ -1,4 +1,4 @@
-MODEL = "meta-llama/llama-3.3-70b-instruct:free"
+MODEL = "meta-llama/llama-3.3-70b-instruct"
 
 BASE_URL = "https://openrouter.ai/api/v1"
 
