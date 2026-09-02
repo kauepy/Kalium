@@ -1,6 +1,5 @@
 from .model import chamar_modelo
 
-
 messages = [
     {
         "role": "system",
