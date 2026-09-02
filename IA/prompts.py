@@ -341,4 +341,3 @@ REGRAS PARA ESTA RESPOSTA:
 
 Produza somente a resposta educacional ao usuário.
 """
-```
