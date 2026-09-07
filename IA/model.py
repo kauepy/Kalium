@@ -1,37 +1,45 @@
+import logging
 import os
+
 import requests
-from pathlib import Path
 from dotenv import load_dotenv
 
-from .config import (
-    MODEL,
-    BASE_URL,
-    TEMPERATURE,
-    MAX_TOKENS,
-    TIMEOUT,
-)
+try:
+    from .config import MODEL, BASE_URL, TEMPERATURE, MAX_TOKENS, TIMEOUT
+    from .security import validar_resposta_ia
+except ImportError:
+    from config import MODEL, BASE_URL, TEMPERATURE, MAX_TOKENS, TIMEOUT
+    from security import validar_resposta_ia
 
-BASE_DIR = Path(__file__).resolve().parent
-ENV_FILE = BASE_DIR / ".env"
+load_dotenv()
 
-load_dotenv(ENV_FILE, override=True)
+logger = logging.getLogger("kalium.model")
 
-API_KEY = os.getenv("OPENROUTER_API_KEY")
+API_KEY = os.environ.get("OPENROUTER_API_KEY")
+
+if not API_KEY:
+    raise RuntimeError("OPENROUTER_API_KEY não encontrada no .env")
 
 
-def chamar_modelo(messages):
-    """
-    Envia mensagens para o modelo através da OpenRouter
-    e retorna somente o texto da resposta.
-    """
+class ErroModelo(Exception):
+    pass
 
-    if not API_KEY:
-        raise RuntimeError(
-            "OPENROUTER_API_KEY não encontrada no arquivo .env"
-        )
 
+class ChaveInvalida(ErroModelo):
+    pass
+
+
+class ModeloIndisponivel(ErroModelo):
+    pass
+
+
+class TimeoutModelo(ErroModelo):
+    pass
+
+
+def chamar_modelo(mensagens: list[dict], temperatura: float = TEMPERATURE, max_tokens: int = MAX_TOKENS) -> str:
     try:
-        response = requests.post(
+        resposta = requests.post(
             f"{BASE_URL}/chat/completions",
             headers={
                 "Authorization": f"Bearer {API_KEY}",
@@ -39,34 +47,38 @@ def chamar_modelo(messages):
             },
             json={
                 "model": MODEL,
-                "messages": messages,
-                "temperature": TEMPERATURE,
-                "max_tokens": MAX_TOKENS,
+                "messages": mensagens,
+                "temperature": temperatura,
+                "max_tokens": max_tokens,
             },
             timeout=TIMEOUT,
         )
+    except requests.exceptions.Timeout as e:
+        logger.exception("Timeout ao chamar o modelo")
+        raise TimeoutModelo("O modelo demorou demais pra responder.") from e
+    except requests.exceptions.RequestException as e:
+        logger.exception("Falha de rede ao chamar o modelo")
+        raise ModeloIndisponivel("Não foi possível conectar ao modelo agora.") from e
 
-        if not response.ok:
-            raise RuntimeError(
-                f"OpenRouter retornou {response.status_code}: "
-                f"{response.text}"
-            )
+    if resposta.status_code == 401:
+        logger.error("Chave da API do OpenRouter inválida ou expirada")
+        raise ChaveInvalida("Chave de API inválida.")
 
-        data = response.json()
+    if resposta.status_code in (429, 503):
+        logger.error("Modelo indisponível (status %s)", resposta.status_code)
+        raise ModeloIndisponivel("O modelo está indisponível no momento.")
 
-        return data["choices"][0]["message"]["content"]
+    try:
+        resposta.raise_for_status()
+    except requests.exceptions.HTTPError as e:
+        logger.exception("Erro HTTP inesperado do modelo")
+        raise ModeloIndisponivel("O modelo retornou um erro inesperado.") from e
 
-    except requests.exceptions.Timeout:
-        raise RuntimeError(
-            "A OpenRouter demorou muito para responder."
-        )
+    dados = resposta.json()
+    try:
+        texto = dados["choices"][0]["message"]["content"]
+    except (KeyError, IndexError, TypeError) as e:
+        logger.exception("Resposta do modelo em formato inesperado")
+        raise ModeloIndisponivel("O modelo retornou uma resposta em formato inesperado.") from e
 
-    except requests.exceptions.RequestException as error:
-        raise RuntimeError(
-            f"Erro ao conectar com a OpenRouter: {error}"
-        )
-
-    except (KeyError, IndexError):
-        raise RuntimeError(
-            "A resposta da OpenRouter veio em um formato inesperado."
-        )
+    return validar_resposta_ia(texto)
