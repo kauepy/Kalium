@@ -40,8 +40,8 @@ def _ensure_packages():
         return
 
     print("=" * 60)
-    print(f"⚠️  Dependências faltando: {', '.join(faltando)}")
-    print("🔧 Tentando instalar automaticamente...")
+    print(f"Dependências faltando: {', '.join(faltando)}")
+    print("Tentando instalar automaticamente...")
     print("=" * 60)
 
     try:
@@ -50,10 +50,10 @@ def _ensure_packages():
             stdout=sys.stdout,
             stderr=subprocess.STDOUT,
         )
-        print("✅ Dependências instaladas com sucesso!\n")
+        print("Dependências instaladas com sucesso!\n")
     except subprocess.CalledProcessError:
         print("\n" + "=" * 60)
-        print("� Falha ao instalar dependências automaticamente.")
+        print("Falha ao instalar dependências automaticamente.")
         print("=" * 60)
         print(f"\nTente: {sys.executable} -m pip install " + " ".join(faltando))
         sys.exit(1)
@@ -87,7 +87,7 @@ try:
     from IA import responder as ia_responder
     IA_DISPONIVEL = True
 except Exception as e:
-    logger.warning(f"⚠️ Pacote IA indisponível: {e}")
+    logger.warning(f"Pacote IA indisponível: {e}")
     IA_DISPONIVEL = False
     ia_responder = None
 
@@ -109,26 +109,26 @@ store: SQLiteStore | None = None
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global store
-    logger.info("🚀 Inicializando Kalium Backend...")
+    logger.info("Inicializando Kalium Backend...")
 
     store = SQLiteStore(DB_PATH)
 
     if AUTO_REINDEX and store.vazio():
-        logger.info(f"📂 Banco vazio. Indexando HTMLs de '{HTML_DIR}'...")
+        logger.info(f"Banco vazio. Indexando HTMLs de '{HTML_DIR}'...")
         try:
             n = reindexar_htmls(HTML_DIR, DB_PATH, verbose=False)
-            logger.info(f"✅ {n} itens indexados.")
+            logger.info(f"{n} itens indexados.")
         except Exception as e:
-            logger.warning(f"⚠️ Falha na auto-indexação: {e}")
+            logger.warning(f"Falha na auto-indexação: {e}")
     else:
-        logger.info(f"📚 Banco com {store.contar()} itens carregados.")
+        logger.info(f"Banco com {store.contar()} itens carregados.")
 
-    logger.info(f"� CORS permitido: {allowed_origins}")
-    logger.info("✅ Pronto para receber requisições.")
+    logger.info(f"CORS permitido: {allowed_origins}")
+    logger.info("Pronto para receber requisições.")
 
     yield
 
-    logger.info("🛑 Encerrando backend...")
+    logger.info("Encerrando backend...")
     if store:
         store.fechar()
 
@@ -440,12 +440,12 @@ async def sobre_html():
 if __name__ == "__main__":
     import uvicorn
     print("\n" + "=" * 60)
-    print("🚀 Kalium Backend v2.1.0 (SQLite + FTS5)")
+    print("Kalium Backend v2.1.0 (SQLite + FTS5)")
     print("=" * 60)
-    print(f"📍 API:        http://localhost:8000")
-    print(f"📚 Docs:       http://localhost:8000/docs")
-    print(f"❤️  Health:    http://localhost:8000/health")
-    print(f"🌐 Site:       http://localhost:8000/")
-    print(f"🗄️  Banco:      {DB_PATH}")
+    print(f"API:        http://localhost:8000")
+    print(f"Docs:       http://localhost:8000/docs")
+    print(f"Health:    http://localhost:8000/health")
+    print(f"Site:       http://localhost:8000/")
+    print(f"Banco:      {DB_PATH}")
     print("=" * 60 + "\n")
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -174,7 +174,7 @@ def indexar(html_dir: str, db_path: str, limpar: bool = False, verbose: bool = T
 
     store.fechar()
     if verbose:
-        print(f"\n✅ Indexação concluída: {total} itens adicionados em {db_path}")
+        print(f"\nIndexação concluída: {total} itens adicionados em {db_path}")
     return total
 
 
