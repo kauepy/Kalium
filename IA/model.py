@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 
 import requests
 from dotenv import load_dotenv
@@ -11,7 +12,9 @@ except ImportError:
     from config import MODEL, BASE_URL, TEMPERATURE, MAX_TOKENS, TIMEOUT
     from security import validar_resposta_ia
 
-load_dotenv()
+# caminho fixo pro .env desta pasta, pra funcionar não importa de onde o
+# processo (main.py, pytest, etc) foi iniciado
+load_dotenv(Path(__file__).resolve().parent / ".env")
 
 logger = logging.getLogger("kalium.model")
 

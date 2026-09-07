@@ -153,6 +153,44 @@ class KaliumSearchEngine {
         }
         return Array.from(set).slice(0, 5);
     }
+
+    /**
+     * Pergunta ao assistente de IA (POST /ia/perguntar).
+     * signal: AbortSignal opcional para cancelar a requisição.
+     */
+    async perguntarIA(pergunta, signal) {
+        const texto = (pergunta || '').trim();
+        if (!texto) {
+            throw new Error('Digite uma pergunta.');
+        }
+
+        const resp = await fetch(`${this.apiBase}/ia/perguntar`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ pergunta: texto.slice(0, 500) }),
+            signal,
+        });
+
+        let data = {};
+        try {
+            data = await resp.json();
+        } catch {
+            data = {};
+        }
+
+        if (!resp.ok) {
+            const detalhe = data.detail;
+            const msg = typeof detalhe === 'string'
+                ? detalhe
+                : 'Não foi possível obter uma resposta da IA.';
+            throw new Error(msg);
+        }
+
+        return {
+            resposta: data.resposta || '',
+            fontes: Array.isArray(data.fontes) ? data.fontes : [],
+        };
+    }
 }
 
 // Variável global (mantida por compatibilidade)

@@ -4,28 +4,37 @@ class KaliumSearchUI {
         this.modalOpen = false;
         this.currentQuery = '';
         this.searchTimeout = null;
+        this.mode = 'site'; // 'site' | 'ia'
+        this.iaAbort = null;
         this.init();
     }
 
     init() {
         this.createModal();
         this.attachEventListeners();
+        this.applyMode();
         console.log('[Kalium] UI inicializada');
     }
 
     createModal() {
-        // Evita criar duplicado se o script for carregado 2x
         if (document.getElementById('searchModal')) return;
 
         const html = `
             <div class="search-overlay" id="searchOverlay"></div>
             <div class="search-modal" id="searchModal">
                 <div class="search-modal-header">
-                    <span class="search-modal-title">🔬 Buscar</span>
-                    <button class="search-modal-close" id="searchCloseBtn">×</button>
+                    <span class="search-modal-title" id="searchModalTitle">🔬 Buscar</span>
+                    <button class="search-modal-close" id="searchCloseBtn" type="button">×</button>
                 </div>
-                <input type="text" id="searchInput" class="search-modal-input"
-                    placeholder="Pesquisar no Kalium..." autocomplete="off">
+                <div class="search-mode-toggle" role="tablist">
+                    <button type="button" class="search-mode-btn active" data-mode="site" id="modeSiteBtn">No site</button>
+                    <button type="button" class="search-mode-btn" data-mode="ia" id="modeIaBtn">Perguntar à IA</button>
+                </div>
+                <div class="search-ask-row">
+                    <input type="text" id="searchInput" class="search-modal-input"
+                        placeholder="Pesquisar no Kalium..." autocomplete="off" maxlength="500">
+                    <button type="button" class="search-ia-ask hidden" id="iaAskBtn">Perguntar</button>
+                </div>
                 <div class="search-result-count" id="resultCount"></div>
                 <div class="search-results-container" id="searchResults">
                     <div class="search-empty-state">
@@ -34,7 +43,7 @@ class KaliumSearchUI {
                         <div class="search-empty-state-text">Pesquise por qualquer termo do conteúdo</div>
                     </div>
                 </div>
-                <div class="search-modal-footer">
+                <div class="search-modal-footer" id="searchFooter">
                     Pressione <kbd>ESC</kbd> para fechar
                 </div>
             </div>
@@ -43,49 +52,71 @@ class KaliumSearchUI {
     }
 
     attachEventListeners() {
-        // Captura TODOS os botões .icon-btn (incluindo o da lupa)
-        const searchBtns = document.querySelectorAll('.icon-btn');
-        console.log(`[Kalium] Botões de busca encontrados: ${searchBtns.length}`);
-
-        searchBtns.forEach((btn) => {
+        document.querySelectorAll('[data-kalium="search"]').forEach((btn) => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                console.log('[Kalium] Botão de busca clicado');
+                this.setMode('site');
                 this.toggle();
             });
         });
 
-        const closeBtn = document.getElementById('searchCloseBtn');
-        if (closeBtn) {
-            closeBtn.addEventListener('click', () => this.close());
+        document.querySelectorAll('[data-kalium="ia"]').forEach((btn) => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                this.setMode('ia');
+                this.open();
+            });
+        });
+
+        // compatibilidade: lupa antiga sem data-kalium
+        if (!document.querySelector('[data-kalium="search"]')) {
+            document.querySelectorAll('.icon-btn').forEach((btn) => {
+                btn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.toggle();
+                });
+            });
         }
 
-        const overlay = document.getElementById('searchOverlay');
-        if (overlay) {
-            overlay.addEventListener('click', () => this.close());
-        }
+        document.getElementById('searchCloseBtn')?.addEventListener('click', () => this.close());
+        document.getElementById('searchOverlay')?.addEventListener('click', () => this.close());
+        document.getElementById('modeSiteBtn')?.addEventListener('click', () => this.setMode('site'));
+        document.getElementById('modeIaBtn')?.addEventListener('click', () => this.setMode('ia'));
+        document.getElementById('iaAskBtn')?.addEventListener('click', () => this.perguntarIA());
 
         const input = document.getElementById('searchInput');
         if (input) {
             input.addEventListener('input', (e) => {
                 this.currentQuery = e.target.value;
-                this.scheduleSearch();
+                if (this.mode === 'site') this.scheduleSearch();
+            });
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && this.mode === 'ia') {
+                    e.preventDefault();
+                    this.perguntarIA();
+                }
             });
         }
 
-        // Atalho Ctrl+K / Cmd+K e ESC
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.modalOpen) {
                 this.close();
             }
             if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
                 e.preventDefault();
+                this.setMode('site');
                 this.toggle();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'i') {
+                e.preventDefault();
+                this.setMode('ia');
+                this.open();
             }
         });
 
-        // Click em resultado
         document.addEventListener('click', (e) => {
             const resultItem = e.target.closest('.search-result-item');
             if (!resultItem) return;
@@ -95,6 +126,46 @@ class KaliumSearchUI {
             this.navegarComTermo(page, url, termo);
             this.close();
         });
+    }
+
+    setMode(mode) {
+        if (mode !== 'site' && mode !== 'ia') return;
+        this.mode = mode;
+        this.applyMode();
+        if (this.modalOpen && mode === 'site' && this.currentQuery.trim()) {
+            this.performSearch();
+        }
+    }
+
+    applyMode() {
+        const isIa = this.mode === 'ia';
+        const title = document.getElementById('searchModalTitle');
+        const input = document.getElementById('searchInput');
+        const askBtn = document.getElementById('iaAskBtn');
+        const footer = document.getElementById('searchFooter');
+        const siteBtn = document.getElementById('modeSiteBtn');
+        const iaBtn = document.getElementById('modeIaBtn');
+
+        if (title) title.textContent = isIa ? 'IA Kalium' : '🔬 Buscar';
+        if (input) {
+            input.placeholder = isIa
+                ? 'Pergunte sobre potássio...'
+                : 'Pesquisar no Kalium...';
+        }
+        if (askBtn) askBtn.classList.toggle('hidden', !isIa);
+        if (footer) {
+            footer.innerHTML = isIa
+                ? 'Enter para perguntar · <kbd>ESC</kbd> para fechar · <kbd>Ctrl</kbd>+<kbd>I</kbd>'
+                : 'Pressione <kbd>ESC</kbd> para fechar · <kbd>Ctrl</kbd>+<kbd>K</kbd>';
+        }
+        siteBtn?.classList.toggle('active', !isIa);
+        iaBtn?.classList.toggle('active', isIa);
+
+        if (isIa) {
+            this.renderIaEmpty();
+        } else if (!this.currentQuery.trim()) {
+            this.renderEmptyState();
+        }
     }
 
     navegarComTermo(page, url, termo) {
@@ -108,54 +179,35 @@ class KaliumSearchUI {
 
         let destino = null;
 
-        // Normaliza o nome da página recebido pela API
         const pagina = String(page || '')
             .trim()
             .toLowerCase();
 
-        // 1. Tenta encontrar pelo nome da página
         if (pagina === 'index') {
             destino = paths.index;
-        }
-
-        else if (pagina === 'conteudo') {
+        } else if (pagina === 'conteudo') {
             destino = paths.conteudo;
-        }
-
-        else if (pagina === 'ciclo') {
+        } else if (pagina === 'ciclo') {
             destino = paths.ciclo;
-        }
-
-        else if (pagina === 'sobre') {
+        } else if (pagina === 'sobre') {
             destino = paths.sobre;
         }
 
-        // 2. Se não encontrou pela página, usa a URL
         if (!destino && url) {
-
             destino = url;
-
-            // Remove / inicial para poder normalizar
             destino = destino.replace(/^\/+/, '');
-
-            // Se já começa com html/, mantém
             if (!destino.startsWith('html/')) {
                 destino = `html/${destino}`;
             }
-
             destino = `/${destino}`;
         }
 
-        // 3. Fallback
         if (!destino) {
             destino = paths.index;
         }
 
-        // 4. Adiciona o termo ANTES do #
         if (termo) {
-
             const hashIndex = destino.indexOf('#');
-
             let base = destino;
             let hash = '';
 
@@ -164,31 +216,10 @@ class KaliumSearchUI {
                 hash = destino.substring(hashIndex);
             }
 
-            const sep =
-                base.includes('?')
-                    ? '&'
-                    : '?';
-
-            destino =
-                `${base}${sep}buscar=${encodeURIComponent(termo)}${hash}`;
-
-            sessionStorage.setItem(
-                'kalium_termo',
-                termo
-            );
+            const sep = base.includes('?') ? '&' : '?';
+            destino = `${base}${sep}buscar=${encodeURIComponent(termo)}${hash}`;
+            sessionStorage.setItem('kalium_termo', termo);
         }
-
-        console.log(
-            `[Kalium] Página recebida: "${page}"`
-        );
-
-        console.log(
-            `[Kalium] URL recebida: "${url}"`
-        );
-
-        console.log(
-            `[Kalium] Navegando para: ${destino}`
-        );
 
         window.location.href = destino;
     }
@@ -204,7 +235,7 @@ class KaliumSearchUI {
         document.getElementById('searchInput')?.focus();
 
         const termoAnterior = sessionStorage.getItem('kalium_termo');
-        if (termoAnterior && !this.currentQuery) {
+        if (this.mode === 'site' && termoAnterior && !this.currentQuery) {
             this.currentQuery = termoAnterior;
             const input = document.getElementById('searchInput');
             if (input) input.value = termoAnterior;
@@ -216,6 +247,10 @@ class KaliumSearchUI {
         this.modalOpen = false;
         document.getElementById('searchOverlay')?.classList.remove('active');
         document.getElementById('searchModal')?.classList.remove('active');
+        if (this.iaAbort) {
+            this.iaAbort.abort();
+            this.iaAbort = null;
+        }
     }
 
     scheduleSearch() {
@@ -247,6 +282,38 @@ class KaliumSearchUI {
         }
     }
 
+    async perguntarIA() {
+        const pergunta = this.currentQuery.trim();
+        if (!pergunta) {
+            this.renderIaEmpty();
+            return;
+        }
+
+        if (!kaliumSearch) {
+            this.renderError('Motor não inicializado');
+            return;
+        }
+
+        if (this.iaAbort) this.iaAbort.abort();
+        this.iaAbort = new AbortController();
+
+        const askBtn = document.getElementById('iaAskBtn');
+        if (askBtn) askBtn.disabled = true;
+        this.renderIaLoading();
+
+        try {
+            const dados = await kaliumSearch.perguntarIA(pergunta, this.iaAbort.signal);
+            this.renderIaAnswer(dados);
+        } catch (err) {
+            if (err.name === 'AbortError') return;
+            console.error('[Kalium] Erro na IA:', err);
+            this.renderError(err.message || 'Falha ao perguntar à IA');
+        } finally {
+            if (askBtn) askBtn.disabled = false;
+            this.iaAbort = null;
+        }
+    }
+
     renderLoading() {
         const c = document.getElementById('searchResults');
         const n = document.getElementById('resultCount');
@@ -258,15 +325,27 @@ class KaliumSearchUI {
             </div>`;
     }
 
+    renderIaLoading() {
+        const c = document.getElementById('searchResults');
+        const n = document.getElementById('resultCount');
+        if (n) n.textContent = 'Consultando fontes...';
+        if (c) c.innerHTML = `
+            <div class="search-empty-state">
+                <div class="search-empty-state-icon">⏳</div>
+                <div class="search-empty-state-title">A IA está pensando</div>
+                <div class="search-empty-state-text">Isso pode levar alguns segundos</div>
+            </div>`;
+    }
+
     renderError(msg) {
         const c = document.getElementById('searchResults');
         const n = document.getElementById('resultCount');
-        if (n) n.textContent = msg;
+        if (n) n.textContent = 'Erro';
         if (c) c.innerHTML = `
             <div class="search-empty-state">
                 <div class="search-empty-state-icon">⚠️</div>
                 <div class="search-empty-state-title">Erro</div>
-                <div class="search-empty-state-text">${msg}</div>
+                <div class="search-empty-state-text">${this.escape(msg)}</div>
             </div>`;
     }
 
@@ -301,6 +380,35 @@ class KaliumSearchUI {
         }).join('');
     }
 
+    renderIaAnswer(dados) {
+        const c = document.getElementById('searchResults');
+        const n = document.getElementById('resultCount');
+        const fontes = dados.fontes || [];
+        if (n) n.textContent = fontes.length ? `${fontes.length} fonte${fontes.length !== 1 ? 's' : ''}` : 'Resposta';
+        if (!c) return;
+
+        const fontesHtml = fontes.length
+            ? `<div class="search-ia-sources">
+                    <div class="search-ia-sources-title">Fontes</div>
+                    ${fontes.map((f) => {
+                        const titulo = this.escape(f.titulo || f.url || 'Fonte');
+                        const url = this.escape(f.url || '');
+                        const num = this.escape(String(f.numero ?? ''));
+                        if (!url) {
+                            return `<span class="search-ia-source"><span class="search-ia-source-index">${num}.</span>${titulo}</span>`;
+                        }
+                        return `<a class="search-ia-source" href="${url}" target="_blank" rel="noopener noreferrer"><span class="search-ia-source-index">${num}.</span>${titulo}</a>`;
+                    }).join('')}
+               </div>`
+            : '';
+
+        c.innerHTML = `
+            <div class="search-ia-answer">
+                <div class="search-ia-answer-text">${this.escape(dados.resposta || '')}</div>
+                ${fontesHtml}
+            </div>`;
+    }
+
     renderEmptyState() {
         const c = document.getElementById('searchResults');
         const n = document.getElementById('resultCount');
@@ -309,6 +417,19 @@ class KaliumSearchUI {
             <div class="search-empty-state">
                 <div class="search-empty-state-icon">🔍</div>
                 <div class="search-empty-state-title">Digite para começar</div>
+                <div class="search-empty-state-text">Pesquise por qualquer termo do conteúdo</div>
+            </div>`;
+    }
+
+    renderIaEmpty() {
+        const c = document.getElementById('searchResults');
+        const n = document.getElementById('resultCount');
+        if (n) n.textContent = '';
+        if (c) c.innerHTML = `
+            <div class="search-empty-state">
+                <div class="search-empty-state-icon">✨</div>
+                <div class="search-empty-state-title">Pergunte à IA</div>
+                <div class="search-empty-state-text">Sobre potássio e o ciclo do potássio</div>
             </div>`;
     }
 
@@ -333,6 +454,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log(`[Kalium] Motor de busca: ${ok ? 'OK' : 'FALHOU'}`);
     if (ok) {
         const ui = new KaliumSearchUI();
-        window.kaliumUI = ui; // pra debug no console
+        window.kaliumUI = ui;
     }
 });

@@ -23,22 +23,30 @@ import sys
 import subprocess
 import importlib.util
 
-REQUIRED_PACKAGES = ["fastapi", "uvicorn", "pydantic"]
+# nome de import -> nome do pacote no pip (só diferem pro python-dotenv)
+PACOTES_NECESSARIOS = {
+    "fastapi": "fastapi",
+    "uvicorn": "uvicorn",
+    "pydantic": "pydantic",
+    "requests": "requests",
+    "dotenv": "python-dotenv",
+    "ddgs": "ddgs",
+}
 
 
 def _ensure_packages():
-    missing = [pkg for pkg in REQUIRED_PACKAGES if importlib.util.find_spec(pkg) is None]
-    if not missing:
+    faltando = [nome_pip for mod, nome_pip in PACOTES_NECESSARIOS.items() if importlib.util.find_spec(mod) is None]
+    if not faltando:
         return
 
     print("=" * 60)
-    print(f"⚠️  Dependências faltando: {', '.join(missing)}")
+    print(f"⚠️  Dependências faltando: {', '.join(faltando)}")
     print("🔧 Tentando instalar automaticamente...")
     print("=" * 60)
 
     try:
         subprocess.check_call(
-            [sys.executable, "-m", "pip", "install", *missing],
+            [sys.executable, "-m", "pip", "install", *faltando],
             stdout=sys.stdout,
             stderr=subprocess.STDOUT,
         )
@@ -47,7 +55,7 @@ def _ensure_packages():
         print("\n" + "=" * 60)
         print("� Falha ao instalar dependências automaticamente.")
         print("=" * 60)
-        print(f"\nTente: {sys.executable} -m pip install " + " ".join(missing))
+        print(f"\nTente: {sys.executable} -m pip install " + " ".join(faltando))
         sys.exit(1)
 
 
@@ -72,6 +80,16 @@ from indexar_html import indexar as reindexar_htmls
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("site-backend")
+
+# IA de pesquisa web (pasta IA/) - opcional: se a chave não estiver
+# configurada, o site continua no ar, só o endpoint de IA fica indisponível.
+try:
+    from IA import responder as ia_responder
+    IA_DISPONIVEL = True
+except Exception as e:
+    logger.warning(f"⚠️ Pacote IA indisponível: {e}")
+    IA_DISPONIVEL = False
+    ia_responder = None
 
 # ===================== Configuração =====================
 DB_PATH = os.environ.get("KALIUM_DB", "site.db")
@@ -198,6 +216,10 @@ class PesquisaRegistro(BaseModel):
     total_palavras_pagina: int = Field(0, ge=0)
 
 
+class PerguntaIA(BaseModel):
+    pergunta: str = Field(..., min_length=1, max_length=500)
+
+
 # ===================== Endpoints da API =====================
 @app.get("/health")
 async def health():
@@ -221,6 +243,7 @@ async def info():
             "/api/v1/itens",
             "/api/v1/pesquisas",
             "/api/v1/admin/reindexar",
+            "/api/v1/ia/perguntar",
         ],
     }
 
@@ -336,6 +359,23 @@ async def admin_reindexar(limpar: bool = Query(False)):
     except Exception as e:
         logger.exception("Falha na re-indexação")
         raise HTTPException(status_code=500, detail=f"Falha ao re-indexar: {e}")
+
+
+# ---------- IA (busca web) ----------
+# def normal (não async): a IA.responder() faz chamadas de rede bloqueantes
+# (busca no DuckDuckGo + chamada ao modelo). Com "def" o FastAPI roda isso
+# numa threadpool, em vez de travar o loop de eventos que serve o resto do site.
+@app.post("/api/v1/ia/perguntar")
+def ia_perguntar(dados: PerguntaIA):
+    if not IA_DISPONIVEL:
+        raise HTTPException(status_code=503, detail="Assistente de IA indisponível no momento.")
+
+    resultado = ia_responder(dados.pergunta)
+
+    if "erro" in resultado:
+        raise HTTPException(status_code=400, detail=resultado["erro"])
+
+    return resultado
 
 
 # ===================== ARQUIVOS ESTÁTICOS =====================
