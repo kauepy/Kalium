@@ -18,6 +18,10 @@ class PerguntaInvalida(Exception):
     pass
 
 
+class RespostaInvalida(Exception):
+    pass
+
+
 def normalizar_texto(texto: str) -> str:
     texto = unicodedata.normalize("NFKC", texto).strip()
     return re.sub(r"[\x00-\x1f\x7f]", "", texto)  # tira caractere de controle
@@ -98,7 +102,7 @@ def validar_fonte(titulo: str, url: str, trecho: str) -> bool:
 
 def validar_resposta_ia(resposta) -> str:
     if not isinstance(resposta, str) or not resposta.strip():
-        raise PerguntaInvalida("A IA não retornou uma resposta válida.")
+        raise RespostaInvalida("A IA não retornou uma resposta válida.")
 
     if len(resposta) > TAMANHO_MAX_RESPOSTA:
         resposta = resposta[:TAMANHO_MAX_RESPOSTA] + "\n[...resposta truncada...]"

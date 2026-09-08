@@ -7,10 +7,10 @@ from dotenv import load_dotenv
 
 try:
     from .config import MODEL, BASE_URL, TEMPERATURE, MAX_TOKENS, TIMEOUT
-    from .security import validar_resposta_ia
+    from .security import RespostaInvalida, validar_resposta_ia
 except ImportError:
     from config import MODEL, BASE_URL, TEMPERATURE, MAX_TOKENS, TIMEOUT
-    from security import validar_resposta_ia
+    from security import RespostaInvalida, validar_resposta_ia
 
 # caminho fixo pro .env desta pasta, pra funcionar não importa de onde o
 # processo (main.py, pytest, etc) foi iniciado
@@ -74,7 +74,7 @@ def chamar_modelo(mensagens: list[dict], temperatura: float = TEMPERATURE, max_t
     try:
         resposta.raise_for_status()
     except requests.exceptions.HTTPError as e:
-        logger.exception("Erro HTTP inesperado do modelo")
+        logger.exception("Erro HTTP inesperado do modelo. Corpo da resposta: %s", resposta.text[:500])
         raise ModeloIndisponivel("O modelo retornou um erro inesperado.") from e
 
     dados = resposta.json()
@@ -84,4 +84,8 @@ def chamar_modelo(mensagens: list[dict], temperatura: float = TEMPERATURE, max_t
         logger.exception("Resposta do modelo em formato inesperado")
         raise ModeloIndisponivel("O modelo retornou uma resposta em formato inesperado.") from e
 
-    return validar_resposta_ia(texto)
+    try:
+        return validar_resposta_ia(texto)
+    except RespostaInvalida as e:
+        logger.error("Modelo respondeu, mas com conteúdo vazio ou inválido")
+        raise ModeloIndisponivel(str(e)) from e
